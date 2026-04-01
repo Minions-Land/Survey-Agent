@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Survey Agent</title>
+<link rel="stylesheet" href="/static/style.css?v=3">
+<link rel="stylesheet" href="/static/taxonomy_viz.css?v=2">
+</head>
+<body>
+
+<!-- ── 顶栏 ─────────────────────────────────────────────────────────────── -->
+<header class="topbar">
+  <div class="topbar-left">
+    <span class="logo">📚 Survey Agent</span>
+  </div>
+  <div class="topbar-right">
+    <button class="btn-icon" id="lang-btn" onclick="toggleLang()" title="Switch language">中 / EN</button>
+    <button class="btn-icon" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">☀️</button>
+    <span id="status-badge" class="badge badge-idle" data-i18n="status.idle">空闲</span>
+  </div>
+</header>
+
+<!-- ── 主体布局 ────────────────────────────────────────────────────────── -->
+<div class="main-layout">
+
+  <!-- ══ 左侧面板：配置 ══════════════════════════════════════════════════ -->
+  <aside class="sidebar" id="sidebar">
+    <form id="config-form">
+
+      <!-- 参考资料 -->
+      <section class="form-section">
+        <h3 data-i18n="section.refMaterials">📖 参考资料</h3>
+        <textarea id="topic" name="topic" rows="3"
+          data-i18n-placeholder="placeholder.topic"
+          placeholder="例：视觉 Transformer 在医学图像分析中的应用" required></textarea>
+
+        <label data-i18n="label.paperIds">论文 ID（可选）</label>
+        <input type="text" id="seeds" name="seeds"
+          data-i18n-placeholder="placeholder.seeds"
+          placeholder="S2 ID · arXiv ID · DOI（逗号分隔）">
+        <input type="hidden" id="local_seed_refs" name="local_seed_refs" value="">
+
+        <!-- 搜索 & 上传 -->
+        <div class="seed-actions">
+          <button type="button" class="btn-sm" onclick="toggleSeedSearch()" data-i18n="btn.searchPapers">🔍 标题搜索</button>
+          <button type="button" class="btn-sm" onclick="triggerSeedPDFUpload()" data-i18n="btn.uploadPDF">📎 上传论文 PDF</button>
+          <input type="file" id="seed-pdf-input" accept=".pdf" style="display:none"
+            onchange="handleSeedPDFUpload(this)">
+        </div>
+
+        <!-- 搜索结果面板 -->
+        <div class="seed-search-panel" id="seed-search-panel" style="display:none">
+          <div class="seed-search-row">
+            <input type="text" id="seed-search-input"
+              data-i18n-placeholder="placeholder.searchTitle"
+              placeholder="论文标题关键词..."
+              onkeydown="if(event.key==='Enter'){event.preventDefault();doSeedSearch();}">
+            <button type="button" class="btn-sm" onclick="doSeedSearch()" data-i18n="btn.search">搜索</button>
+          </div>
+          <div class="seed-results" id="seed-results">
+            <div class="seed-empty" data-i18n="label.searchHint">输入关键词后点击搜索</div>
+          </div>
+        </div>
+
+        <!-- Start 文档 -->
+        <label data-i18n="label.startDoc">起始文档（可选）</label>
+        <p style="font-size:.72rem;color:var(--text-dim);margin:0 0 4px" data-i18n="label.startDocHint">
+          上传你的初步理解或规划文件（PDF/MD/Word/TXT）
+        </p>
+        <div class="seed-actions">
+          <button type="button" class="btn-sm" onclick="triggerStartDocUpload()" data-i18n="btn.uploadStartDoc">📝 上传起始文档</button>
+          <input type="file" id="start-doc-input" accept=".pdf,.md,.txt,.doc,.docx" style="display:none"
+            onchange="handleStartDocUpload(this)">
+        </div>
+        <div id="start-doc-status" style="margin-top:4px;font-size:.75rem;color:var(--text-dim);display:none"></div>
+      </section>
+
+      <!-- LLM 配置 -->
+      <section class="form-section">
+        <h3 data-i18n="section.llm">🤖 语言模型</h3>
+        <label data-i18n="label.provider">Provider</label>
+        <select id="llm_provider" name="llm_provider" onchange="onProviderChange()">
+          <option value="anthropic">Anthropic (Claude)</option>
+          <option value="openai">OpenAI (GPT)</option>
+          <option value="gemini">Google Gemini</option>
+          <option value="deepseek">DeepSeek</option>
+          <option value="kimi">Kimi (Moonshot)</option>
+          <option value="qwen">Qwen (通义千问)</option>
+          <option value="glm">GLM (智谱 AI)</option>
+        </select>
+        <label data-i18n="label.apiKey">API Key</label>
+        <input type="password" id="llm_api_key" name="llm_api_key"
+          data-i18n-placeholder="placeholder.apiKey"
+          placeholder="从环境变量读取（可留空）">
+        <div class="model-row">
+          <div>
+            <label data-i18n="label.cheapModel">轻量模型（提取）</label>
+            <input type="text" id="llm_cheap_model" name="llm_cheap_model" placeholder="默认">
+          </div>
+          <div>
+            <label data-i18n="label.expModel">高质量模型（写作）</label>
+            <input type="text" id="llm_expensive_model" name="llm_expensive_model" placeholder="默认">
+          </div>
+        </div>
+      </section>
+
+      <!-- 搜索配置 -->
+      <section class="form-section">
+        <h3 data-i18n="section.search">🔍 文献搜索</h3>
+        <label data-i18n="label.s2Key">Semantic Scholar API Key（可选）</label>
+        <input type="password" id="s2_api_key" name="s2_api_key"
+          data-i18n-placeholder="placeholder.s2Key"
+          placeholder="无 key 时速率受限">
+        <label data-i18n="label.searchSources">启用的搜索源</label>
+        <div class="checkbox-group">
+          <label><input type="checkbox" name="search_providers" value="s2" checked> Semantic Scholar</label>
+          <label><input type="checkbox" name="search_providers" value="arxiv" checked> arXiv</label>
+          <label><input type="checkbox" name="search_providers" value="openreview"> OpenReview</label>
+        </div>
+      </section>
+
+      <!-- 输出配置 -->
+      <section class="form-section">
+        <h3 data-i18n="section.output">📄 输出设置</h3>
+        <label data-i18n="label.format">文档格式</label>
+        <div class="radio-group">
+          <label><input type="radio" name="output_format" value="latex" checked> LaTeX (.tex)</label>
+          <label><input type="radio" name="output_format" value="markdown"> Markdown (.md)</label>
+        </div>
+        <label data-i18n="label.sensitivity">分类法敏感度</label>
+        <select id="sensitivity" name="sensitivity">
+          <option value="balanced" selected data-i18n="opt.balanced">Balanced（推荐）</option>
+          <option value="strict" data-i18n="opt.strict">Strict（全手动）</option>
+          <option value="liberal" data-i18n="opt.liberal">Liberal（全自动）</option>
+        </select>
+        <div class="checkbox-group" style="margin-top:8px">
+          <label>
+            <input type="checkbox" id="generate_mindmap" name="generate_mindmap">
+            <span data-i18n="label.mindmap">生成思维导图（Mermaid）</span>
+          </label>
+        </div>
+        <label data-i18n="label.papersDir">本地 PDF 目录（可选）</label>
+        <div class="dir-row">
+          <input type="text" id="local_papers_dir" name="local_papers_dir"
+            data-i18n-placeholder="placeholder.papersDir"
+            placeholder="例：data/papers">
+          <button type="button" class="btn-sm" onclick="browsePapersDir()" data-i18n="btn.browse">📁 选择</button>
+        </div>
+      </section>
+
+      <!-- 开始按钮 -->
+      <button type="submit" id="start-btn" class="btn-primary" data-i18n="btn.start">
+        🚀 开始调研
+      </button>
+      <button type="button" id="stop-btn" class="btn-danger" style="display:none"
+        onclick="stopSurvey()" data-i18n="btn.stop">
+        ⏹ 停止
+      </button>
+
+    </form>
+
+    <!-- ── 独立工具：下载引用文献 ── -->
+    <div class="form-section" style="margin-top:16px">
+      <h3 data-i18n="section.dlrefs">📥 下载引用文献</h3>
+      <p style="font-size:.78rem;color:var(--text-dim);margin-bottom:8px" data-i18n="label.dlrefsHint">
+        上传一篇 PDF，系统自动提取参考文献并从 arXiv / Unpaywall 下载全文
+      </p>
+      <div class="seed-actions">
+        <button type="button" class="btn-sm" onclick="triggerRefsPDFUpload()" data-i18n="btn.selectPDF">
+          📄 选择 PDF
+        </button>
+        <input type="file" id="refs-pdf-input" accept=".pdf" style="display:none"
+          onchange="handleRefsPDFUpload(this)">
+      </div>
+      <div id="dlrefs-status" style="margin-top:8px;font-size:.78rem;color:var(--text-dim);display:none"></div>
+      <div id="dlrefs-results" style="margin-top:6px;max-height:180px;overflow-y:auto;display:none"></div>
+    </div>
+  </aside>
+
+  <!-- ══ 右侧面板：输出 ═══════════════════════════════════════════════════ -->
+  <main class="output-panel">
+
+    <!-- 流水线阶段可视化 -->
+    <div class="pipeline" id="pipeline" style="display:none">
+      <div class="pipeline-stages" id="pipeline-stages">
+        <!-- built by JS buildPipeline() -->
+      </div>
+      <div class="pipeline-substatus" id="pipeline-substatus"></div>
+    </div>
+
+    <!-- 聊天流 -->
+    <div class="output-stream" id="output-stream">
+      <div class="welcome-msg">
+        <p data-i18n="welcome.title">👋 欢迎使用 Survey Agent</p>
+        <p data-i18n="welcome.hint1">在左侧填写配置后点击「开始调研」</p>
+        <p class="hint" data-i18n="welcome.hint2">系统将自动完成文献检索、分类、写作全流程</p>
+      </div>
+    </div>
+
+    <!-- 聊天输入栏（始终可见） -->
+    <div class="chat-input-bar" id="chat-input-bar">
+      <div class="chat-quick-actions" id="chat-quick-actions" style="display:none"></div>
+      <div class="chat-input-row">
+        <input type="text" id="chat-input"
+          data-i18n-placeholder="placeholder.agentWorking"
+          placeholder="Agent 正在工作中..."
+          disabled
+          onkeydown="if(event.key==='Enter') sendResume()">
+        <button class="btn-send" id="chat-send-btn" onclick="sendResume()" disabled
+          data-i18n="btn.send">发送</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── 完成弹窗 ─────────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="done-modal" style="display:none">
+  <div class="modal">
+    <h2 data-i18n="done.title">🎉 综述已完成！</h2>
+    <p id="done-message" data-i18n="done.body">综述文件已保存到 data/surveys/ 目录。</p>
+    <button class="btn-primary" onclick="closeDoneModal()" data-i18n="btn.close">关闭</button>
+  </div>
+</div>
+
+<!-- ── Taxonomy Drawer ────────────────────────────────────────────────────── -->
+<div class="tax-drawer" id="tax-drawer">
+
+  <!-- Handle / tab -->
+  <div class="tax-handle" id="tax-handle" onclick="taxToggleDrawer()">
+    <div class="tax-handle-grip"></div>
+    <div class="tax-handle-left">
+      <span>📊</span>
+      <span data-i18n="tax.title">分类可视化</span>
+      <span class="tax-unclassified-badge" id="tax-unclassified-badge" style="display:none">0</span>
+    </div>
+    <div class="tax-handle-stats" id="tax-handle-stats"></div>
+    <div class="tax-handle-right">
+      <span style="font-size:.75rem;color:var(--text-dim)" data-i18n="tax.dragHint">上拉展开</span>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="tax-toolbar" id="tax-toolbar">
+    <!-- Confidence threshold -->
+    <div class="tax-toolbar-group">
+      <label data-i18n="tax.threshold">分类阈值</label>
+      <div class="tax-slider-wrap" id="tax-slider-wrap">
+        <div class="tax-slider-track" id="tax-slider-track">
+          <div class="tax-slider-danger tax-slider-danger-low"></div>
+          <div class="tax-slider-safe"></div>
+          <div class="tax-slider-danger tax-slider-danger-high"></div>
+          <div class="tax-slider-thumb" id="tax-slider-thumb"></div>
+          <div class="tax-slider-ghost" id="tax-slider-ghost"></div>
+        </div>
+      </div>
+      <span class="tax-threshold-val" id="tax-threshold-val">0.50</span>
+      <button class="btn-tax danger tax-confirm-btn" id="tax-confirm-btn"
+        style="display:none" onclick="taxConfirmThreshold()" data-i18n="tax.confirm">确认</button>
+    </div>
+
+    <!-- Edit controls -->
+    <div class="tax-toolbar-group" style="margin-left:auto">
+      <!-- Paper count limit (shown and editable during run) -->
+      <label style="font-size:.74rem;color:var(--text-dim);white-space:nowrap" data-i18n="tax.maxPapers">上限</label>
+      <input type="number" id="tax-max-papers" min="10" max="2000" value="200"
+        style="width:64px;padding:3px 6px;font-size:.78rem;border-radius:var(--radius);background:var(--surface2);border:1px solid var(--border);color:var(--text)"
+        title="最大论文数量（可随时调高，不能低于已分类数量）"
+        onchange="taxUpdateMaxPapers(this.value)">
+      <span id="tax-paper-count-label" style="font-size:.74rem;color:var(--text-dim)"></span>
+      <button class="btn-tax" id="tax-edit-btn" onclick="taxEnterEdit()" data-i18n="tax.edit">
+        ✏️ 编辑分类
+      </button>
+      <button class="btn-tax confirm" id="tax-apply-btn" style="display:none"
+        onclick="taxApplyEdit()" data-i18n="tax.apply">
+        ✅ 应用修改
+      </button>
+      <button class="btn-tax danger" id="tax-cancel-btn" style="display:none"
+        onclick="taxCancelEdit()" data-i18n="tax.cancel">
+        ✕ 取消
+      </button>
+    </div>
+  </div>
+
+  <!-- Tree body -->
+  <div class="tax-body">
+    <div class="tax-tree-wrap">
+      <svg class="tax-svg-overlay" id="tax-svg"></svg>
+      <div class="tax-tree" id="tax-tree">
+        <div class="tax-empty" data-i18n="tax.empty">调研进行中，分类体系尚未建立...</div>
+      </div>
+    </div>
+    <!-- Unclassified / threshold pool -->
+    <div id="tax-unclassified" class="tax-unclassified-pool" style="display:none"></div>
+  </div>
+
+</div>
+
+<script src="/static/app.js?v=7"></script>
+<script src="/static/taxonomy_viz.js?v=2"></script>
+<script>taxVizInit();</script>
+</body>
+</html>

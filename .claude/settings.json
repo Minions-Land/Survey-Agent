@@ -1,0 +1,22 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"\nimport sys, json, os\ntry:\n    data = json.load(sys.stdin)\n    fp = data.get('tool_input', {}).get('file_path', '')\n    ext = os.path.splitext(fp)[1]\n    if ext in ('.py', '.html', '.js', '.css', '.md'):\n        name = os.path.basename(fp)\n        print(f'[SYNC CHECK] {name} modified. Per CLAUDE.md rules:')\n        print('  README.md <-> README_EN.md  (if docs/features changed)')\n        print('  web/static/{index.html,app.js} + web/runner.py  (if features changed)')\n        print('  src/survey_agent/state.py + .env.example  (if new config/state added)')\nexcept Exception:\n    pass\n\"",
+            "timeout": 5,
+            "async": true
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(conda run:*)"
+    ]
+  }
+}

@@ -1,0 +1,2 @@
+[console_scripts]
+survey-agent = survey_agent.__main__:main

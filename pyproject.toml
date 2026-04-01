@@ -1,0 +1,79 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "survey-agent"
+version = "0.1.0"
+description = "An AI-powered multi-agent system for automated academic survey writing"
+requires-python = ">=3.11"
+dependencies = [
+    # LLM & Orchestration
+    "anthropic>=0.49.0",
+    "langgraph>=0.2.0",
+    # Networking
+    "httpx>=0.27.0",
+    # Data modeling
+    "pydantic>=2.0",
+    # BibTeX generation/validation
+    "bibtexparser>=1.4.2",
+    # Rich CLI output
+    "rich>=13.7",
+    # Environment config
+    "python-dotenv>=1.0",
+    # Numeric operations
+    "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+# Install for semantic clustering/taxonomy features
+clustering = [
+    "chromadb>=0.5.0",
+    "hdbscan>=0.8.38",
+    "sentence-transformers>=3.0",
+]
+# Install for web interface
+web = [
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.29.0",
+    "websockets>=12.0",
+    "aiofiles>=23.2.0",
+]
+# Install for non-Claude LLM providers (GPT, Gemini, DeepSeek etc.)
+openai-compat = [
+    "openai>=1.30.0",
+]
+# Install for local PDF reading
+pdf = [
+    "pymupdf>=1.24.0",
+]
+# Install for DOCX Start document support
+docx = [
+    "python-docx>=1.1.0",
+]
+# Dev tooling
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.3",
+    "mypy>=1.9",
+]
+
+[project.scripts]
+survey-agent = "survey_agent.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

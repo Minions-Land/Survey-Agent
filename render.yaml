@@ -1,0 +1,39 @@
+# render.yaml - Render.com 自动部署配置
+#
+# 使用方法:
+# 1. 将代码推送到 GitHub
+# 2. 访问 render.com，创建新的 Web Service
+# 3. 连接你的 GitHub 仓库
+# 4. Render 自动识别此文件并配置服务
+#
+# ⚠️  重要: 在 Render Dashboard 的 Environment Variables 中设置:
+#    ANTHROPIC_API_KEY=sk-ant-xxxxxxxx
+#    （其他可选的 API key 同理）
+
+services:
+  - type: web
+    name: survey-agent
+    runtime: python
+    region: oregon          # 可改为 singapore 或 frankfurt
+    plan: free              # 免费套餐（512MB RAM，每月 750 小时）
+    branch: main
+
+    buildCommand: pip install -e ".[web]"
+    startCommand: uvicorn web.app:app --host 0.0.0.0 --port $PORT
+
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false         # 需要在 Render Dashboard 手动填写
+      - key: SEMANTIC_SCHOLAR_API_KEY
+        sync: false
+      - key: CHEAP_MODEL
+        value: claude-haiku-4-5
+      - key: EXPENSIVE_MODEL
+        value: claude-opus-4-6
+      - key: TAXONOMY_UPDATE_SENSITIVITY
+        value: balanced
+      - key: OUTPUT_DIR
+        value: /tmp/surveys  # Render 免费套餐无持久化存储，用 /tmp
+
+    # 健康检查
+    healthCheckPath: /
