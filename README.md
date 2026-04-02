@@ -115,14 +115,14 @@ ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxx
 
 ```bash
 # 网页界面模式（推荐）
-survey-agent --web
+uv run survey-agent --web
 # 浏览器访问 http://localhost:8080
 
 # 终端交互模式
-survey-agent
+uv run survey-agent
 
 # 指定主题直接启动
-survey-agent --topic "视觉 Transformer 综述"
+uv run survey-agent --topic "视觉 Transformer 综述"
 ```
 
 > **网页版使用教程** → 详见 [WEB_GUIDE.md](WEB_GUIDE.md)
@@ -293,7 +293,7 @@ SEMANTIC_SCHOLAR_API_KEY=            # 可选，无 Key 时速率受限
 ### 命令行参数
 
 ```bash
-survey-agent --help
+uv run survey-agent --help
 
 选项:
   --topic TEXT              综述主题（不提供则交互式输入）
@@ -312,7 +312,7 @@ survey-agent --help
 ## 🌐 网页界面
 
 ```bash
-survey-agent --web
+uv run survey-agent --web
 # 浏览器访问 http://localhost:8080
 ```
 

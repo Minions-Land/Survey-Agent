@@ -115,14 +115,14 @@ ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxx
 
 ```bash
 # Web interface mode (recommended)
-survey-agent --web
+uv run survey-agent --web
 # Open http://localhost:8080 in your browser
 
 # Interactive terminal mode
-survey-agent
+uv run survey-agent
 
 # Start with a specified topic
-survey-agent --topic "Survey of Vision Transformers"
+uv run survey-agent --topic "Survey of Vision Transformers"
 ```
 
 > **Web interface walkthrough** → see [WEB_GUIDE.md](WEB_GUIDE.md)
@@ -292,7 +292,7 @@ SEMANTIC_SCHOLAR_API_KEY=            # Optional; rate-limited without key
 ### CLI Arguments
 
 ```bash
-survey-agent --help
+uv run survey-agent --help
 
 Options:
   --topic TEXT              Survey topic (prompts interactively if omitted)
@@ -311,7 +311,7 @@ Options:
 ## Web Interface
 
 ```bash
-survey-agent --web
+uv run survey-agent --web
 # Open http://localhost:8080 in your browser
 ```
 
