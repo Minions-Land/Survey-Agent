@@ -76,29 +76,22 @@ Survey Agent 是一个端到端的学术综述自动化流水线。它通过多�
 ### 前置条件
 
 - Python 3.11+
+- [uv](https://docs.astral.sh/uv/)（推荐的包管理器）
 - 至少一个支持的 LLM API Key（见[支持的模型](#支持的模型)）
 
 ### 安装
 
-**推荐：使用 conda 虚拟环境（尤其是 Apple Silicon）**
-
 ```bash
-# 1. 创建并激活 conda 环境
-conda create -n survey-agent python=3.11 -y
-conda activate survey-agent
+# 1. 安装 uv（如尚未安装）
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # 2. 克隆项目
 git clone https://github.com/your-username/survey-agent.git
 cd survey-agent
 
-# 3. 安装全功能版（推荐）
-pip install -e ".[web,openai-compat,pdf]"
+# 3. 安装全功能版（推荐，uv 自动创建虚拟环境）
+uv sync --all-extras
 ```
-
-> **国内用户**：建议先配置 pip 镜像加速下载：
-> ```bash
-> pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
-> ```
 
 ### 配置 API Key
 
@@ -367,20 +360,20 @@ LaTeX 文件可与 `.bib` 文件直接配合使用，运行 `pdflatex` + `bibtex
 
 ```bash
 # 语义向量聚类（提升分类准确性）
-pip install -e ".[clustering]"
+uv sync --extra clustering
 # Apple Silicon 用户需额外安装: brew install libomp
 
 # 本地 PDF 文本提取
-pip install -e ".[pdf]"
+uv sync --extra pdf
 
 # 网页界面
-pip install -e ".[web]"
+uv sync --extra web
 
 # 非 Claude LLM（GPT/Gemini/DeepSeek 等）
-pip install -e ".[openai-compat]"
+uv sync --extra openai-compat
 
 # 全功能
-pip install -e ".[web,openai-compat,pdf,clustering]"
+uv sync --all-extras
 ```
 
 ---
@@ -437,8 +430,8 @@ pip install -e ".[web,openai-compat,pdf,clustering]"
 **代码规范**：本项目使用 `ruff` 进行代码格式化，提交前请运行：
 
 ```bash
-pip install -e ".[dev]"
-ruff check src/ && ruff format src/
+uv sync  # dev 依赖默认安装
+uv run ruff check src/ && uv run ruff format src/
 ```
 
 ---

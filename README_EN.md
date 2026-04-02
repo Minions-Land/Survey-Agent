@@ -76,23 +76,21 @@ Supports local paper storage with **page-level read tracking** — each PDF page
 ### Prerequisites
 
 - Python 3.11+
+- [uv](https://docs.astral.sh/uv/) (recommended package manager)
 - At least one supported LLM API key (see [Supported Models](#supported-models))
 
 ### Installation
 
-**Recommended: use a conda virtual environment (especially on Apple Silicon)**
-
 ```bash
-# 1. Create and activate conda environment
-conda create -n survey-agent python=3.11 -y
-conda activate survey-agent
+# 1. Install uv (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # 2. Clone the project
 git clone https://github.com/your-username/survey-agent.git
 cd survey-agent
 
-# 3. Full install (recommended)
-pip install -e ".[web,openai-compat,pdf]"
+# 3. Full install (recommended — uv creates a virtual environment automatically)
+uv sync --all-extras
 ```
 
 ### Configure API Key
@@ -361,20 +359,20 @@ The LaTeX file works directly with the `.bib` file — run `pdflatex` + `bibtex`
 
 ```bash
 # Semantic vector clustering (improves taxonomy accuracy)
-pip install -e ".[clustering]"
+uv sync --extra clustering
 # Apple Silicon users also need: brew install libomp
 
 # Local PDF text extraction
-pip install -e ".[pdf]"
+uv sync --extra pdf
 
 # Web interface
-pip install -e ".[web]"
+uv sync --extra web
 
 # Non-Claude LLMs (GPT/Gemini/DeepSeek etc.)
-pip install -e ".[openai-compat]"
+uv sync --extra openai-compat
 
 # Full install
-pip install -e ".[web,openai-compat,pdf,clustering]"
+uv sync --all-extras
 ```
 
 ---
@@ -431,8 +429,8 @@ Contributions, bug reports, and feature suggestions are welcome!
 **Code style**: This project uses `ruff` for formatting. Before submitting, run:
 
 ```bash
-pip install -e ".[dev]"
-ruff check src/ && ruff format src/
+uv sync  # dev dependencies are installed by default
+uv run ruff check src/ && uv run ruff format src/
 ```
 
 ---

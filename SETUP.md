@@ -7,9 +7,12 @@
 ## 1. Python 环境要求
 
 - **Python 3.11+**（必须）
-- 推荐使用虚拟环境（venv、conda 等）
+- [uv](https://docs.astral.sh/uv/)（推荐的包管理器，自动管理虚拟环境）
 
 ```bash
+# 安装 uv（如尚未安装）
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
 python --version   # 应显示 3.11.x 或更高
 ```
 
@@ -20,8 +23,8 @@ python --version   # 应显示 3.11.x 或更高
 ### 基础安装（必选）
 
 ```bash
-cd "/Users/mjm/Survey Agent"
-pip install -e .
+cd survey-agent
+uv sync
 ```
 
 ### 可选：语义聚类功能
@@ -29,7 +32,13 @@ pip install -e .
 安装后，分类法构建可利用向量聚类（更准确的自动分类）：
 
 ```bash
-pip install -e ".[clustering]"
+uv sync --extra clustering
+```
+
+### 全功能安装
+
+```bash
+uv sync --all-extras
 ```
 
 > **注意**：`hdbscan` 在 Apple Silicon 上需要 `brew install libomp` 才能正常编译。
@@ -170,7 +179,7 @@ Markdown 文件使用 `\cite{key}` 格式标注引用，配合 `.bib` 文件可�
 
 ### Q: 运行时报 `ModuleNotFoundError: No module named 'survey_agent'`
 
-确保已在项目根目录下运行 `pip install -e .`。
+确保已在项目根目录下运行 `uv sync`。
 
 ### Q: `anthropic.AuthenticationError`
 
@@ -185,7 +194,7 @@ Markdown 文件使用 `\cite{key}` 格式标注引用，配合 `.bib` 文件可�
 
 ```bash
 brew install libomp
-pip install hdbscan
+uv sync --extra clustering
 ```
 
 ### Q: 如何中断并恢复一个 Survey？

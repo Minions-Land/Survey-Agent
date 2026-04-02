@@ -1,0 +1,45 @@
+# ── Python ───────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+wheels/
+
+# ── uv / venv ───────────────────────────────────────────────
+.venv/
+.python-version
+
+# ── Environment & Secrets ────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── IDE ──────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Data & Output (runtime-generated) ───────────────────────
+data/
+output/
+*.pdf
+
+# ── Testing / Coverage ──────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ── Misc ─────────────────────────────────────────────────────
+*.log

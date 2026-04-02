@@ -47,8 +47,8 @@
 ### 本地运行
 
 ```bash
-# 确保已激活 conda 环境
-conda activate survey-agent
+# 确保已安装 web 依赖
+# uv sync --extra web
 
 # 启动网页服务（默认端口 8080）
 survey-agent --web
