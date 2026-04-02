@@ -69,6 +69,7 @@ packages = ["src/survey_agent"]
 
 [tool.uv]
 default-groups = ["dev"]
+# index-url = "https://pypi.tuna.tsinghua.edu.cn/simple"  # Uncomment to use Tsinghua mirror
 
 [tool.ruff]
 line-length = 100

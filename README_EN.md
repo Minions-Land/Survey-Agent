@@ -93,6 +93,12 @@ cd survey-agent
 uv sync --all-extras
 ```
 
+> **Slow downloads in China?** Uncomment the Tsinghua mirror in `pyproject.toml`:
+> ```toml
+> [tool.uv]
+> index-url = "https://pypi.tuna.tsinghua.edu.cn/simple"  # Uncomment this line to enable
+> ```
+
 ### Configure API Key
 
 ```bash

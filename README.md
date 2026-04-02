@@ -93,6 +93,12 @@ cd survey-agent
 uv sync --all-extras
 ```
 
+> **国内用户加速**：如果 PyPI 下载缓慢，可在 `pyproject.toml` 中取消注释清华镜像源：
+> ```toml
+> [tool.uv]
+> index-url = "https://pypi.tuna.tsinghua.edu.cn/simple"  # 取消此行注释即可启用
+> ```
+
 ### 配置 API Key
 
 ```bash
